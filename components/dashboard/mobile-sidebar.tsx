@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import Image from "next/image"
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 
 interface User {
   id: string
@@ -30,13 +30,15 @@ export function MobileSidebar({ user, isOpen, onClose }: MobileSidebarProps) {
 
   const isActive = (path: string) => pathname === path
 
+  const memoizedOnClose = useCallback(onClose, [onClose])
+
   useEffect(() => {
-    onClose()
-  }, [pathname, onClose])
+    memoizedOnClose()
+  }, [pathname, memoizedOnClose])
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={memoizedOnClose} />}
 
       <div
         className={`fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
@@ -53,7 +55,7 @@ export function MobileSidebar({ user, isOpen, onClose }: MobileSidebarProps) {
               <p className="text-xs text-muted-foreground">Services</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-sidebar-accent rounded-lg transition-colors">
+          <button onClick={memoizedOnClose} className="p-1 hover:bg-sidebar-accent rounded-lg transition-colors">
             <svg className="w-5 h-5 text-sidebar-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

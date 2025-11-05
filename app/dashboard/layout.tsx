@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar"
@@ -23,6 +23,14 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
+
+  const handleCloseMenu = useCallback(() => {
+    setMobileMenuOpen(false)
+  }, [])
+
+  const handleMenuToggle = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev)
+  }, [])
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -78,10 +86,10 @@ export default function DashboardLayout({
         <Sidebar user={user} />
       </div>
 
-      <MobileSidebar user={user} isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <MobileSidebar user={user} isOpen={mobileMenuOpen} onClose={handleCloseMenu} />
 
       <div className="flex-1 flex flex-col w-full">
-        <Header user={user} onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <Header user={user} onMenuClick={handleMenuToggle} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
