@@ -113,6 +113,7 @@ export default function ExpensesPage() {
 
   const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("[v0] Form submitted - starting expense save")
     try {
       if (
         !formData.description ||
@@ -121,18 +122,28 @@ export default function ExpensesPage() {
         !formData.event_id ||
         !formData.category_id
       ) {
+        console.log("[v0] Validation failed - missing fields")
         alert("Please fill in all required fields")
         return
       }
 
+      console.log("[v0] Validation passed - fetching user")
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
+      if (!user) {
+        console.log("[v0] No user found")
+        alert("User not authenticated")
+        return
+      }
+
+      console.log("[v0] User found:", user.id)
       let receiptUrl = null
       let receiptFileName = null
 
       if (selectedReceipt && user) {
+        console.log("[v0] Receipt selected - uploading file:", selectedReceipt.name)
         const formDataToSend = new FormData()
         formDataToSend.append("file", selectedReceipt)
 
@@ -142,13 +153,17 @@ export default function ExpensesPage() {
             body: formDataToSend,
           })
 
+          console.log("[v0] Upload response status:", response.status)
+
           if (!response.ok) {
             const errorData = await response.json()
+            console.log("[v0] Upload failed:", errorData)
             alert(`Failed to upload receipt: ${errorData.error}`)
             return
           }
 
           const uploadData = await response.json()
+          console.log("[v0] Upload successful:", uploadData)
           receiptUrl = uploadData.url
           receiptFileName = uploadData.filename
         } catch (uploadError) {
@@ -158,14 +173,21 @@ export default function ExpensesPage() {
         }
       }
 
+      console.log("[v0] Preparing to save expense with data:", {
+        description: formData.description,
+        amount: formData.amount,
+        receiptUrl: receiptUrl ? "present" : "none",
+      })
+
       if (editingId) {
-        // Update existing expense
+        console.log("[v0] Updating existing expense:", editingId)
         const updateData: any = {
           description: formData.description,
           amount: Number.parseFloat(formData.amount),
           expense_date: formData.expense_date,
           event_id: formData.event_id,
           category_id: formData.category_id,
+          updated_at: new Date().toISOString(),
         }
 
         if (receiptUrl) {
@@ -181,10 +203,11 @@ export default function ExpensesPage() {
           alert(`Failed to update expense: ${error.message}`)
           return
         }
+        console.log("[v0] Expense updated successfully")
       } else {
-        // Create new expense
-        const { error } = await supabase.from("expenses").insert({
-          created_by: user?.id,
+        console.log("[v0] Creating new expense")
+        const { data: insertData, error } = await supabase.from("expenses").insert({
+          created_by: user.id,
           description: formData.description,
           amount: Number.parseFloat(formData.amount),
           expense_date: formData.expense_date,
@@ -200,8 +223,10 @@ export default function ExpensesPage() {
           alert(`Failed to save expense: ${error.message}`)
           return
         }
+        console.log("[v0] Expense created successfully:", insertData)
       }
 
+      console.log("[v0] Resetting form and reloading data")
       setFormData({
         description: "",
         amount: "",
@@ -212,7 +237,8 @@ export default function ExpensesPage() {
       setSelectedReceipt(null)
       setEditingId(null)
       setIsOpen(false)
-      loadData()
+      await loadData()
+      console.log("[v0] Expense saved and data reloaded")
     } catch (error) {
       console.error("[v0] Error saving expense:", error)
       alert("An unexpected error occurred. Please try again.")
