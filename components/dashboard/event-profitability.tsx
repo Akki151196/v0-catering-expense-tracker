@@ -63,14 +63,17 @@ export function EventProfitability() {
         } = await supabase.auth.getUser()
 
         if (userError || !user) {
+          console.error("[v0] Auth error:", userError)
           setError("Please log in to view profitability data")
           return
         }
 
+        console.log("[v0] Fetching events for user:", user.id)
+
         const { data: eventsData, error: eventsError } = await supabase
           .from("events")
           .select("id, name, client_name, date, booked_amount, pax, status")
-          .eq("user_id", user.id)
+          .eq("created_by", user.id)
           .order("date", { ascending: false })
 
         if (eventsError) {
@@ -79,22 +82,31 @@ export function EventProfitability() {
           return
         }
 
+        console.log("[v0] Events fetched:", eventsData?.length)
+
         if (!eventsData || eventsData.length === 0) {
+          console.log("[v0] No events found")
           setEvents([])
           setLoading(false)
           return
         }
 
+        // Only fetch expenses for events that belong to this user
+        const eventIds = eventsData.map((e: any) => e.id)
+        console.log("[v0] Fetching expenses for event IDs:", eventIds)
+
         const { data: expensesData, error: expensesError } = await supabase
           .from("expenses")
           .select("event_id, amount")
-          .eq("user_id", user.id)
+          .in("event_id", eventIds)
 
         if (expensesError) {
           console.error("[v0] Expenses error:", expensesError)
           setError(`Failed to fetch expenses: ${expensesError.message}`)
           return
         }
+
+        console.log("[v0] Expenses fetched:", expensesData?.length)
 
         // Calculate profitability for each event
         const expensesByEvent = (expensesData || []).reduce(
@@ -127,6 +139,7 @@ export function EventProfitability() {
           }
         })
 
+        console.log("[v0] Profitability data ready:", profitability.length, "events")
         setEvents(profitability)
       } catch (err) {
         console.error("[v0] Error loading profitability data:", err)
@@ -144,6 +157,7 @@ export function EventProfitability() {
       <Card className="border-red-200 bg-red-50">
         <CardContent className="pt-6">
           <p className="text-red-800">{error}</p>
+          <p className="text-xs text-red-600 mt-2">Check the browser console for detailed error logs.</p>
         </CardContent>
       </Card>
     )
