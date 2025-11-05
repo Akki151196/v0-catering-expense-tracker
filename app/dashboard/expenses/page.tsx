@@ -133,26 +133,29 @@ export default function ExpensesPage() {
       let receiptFileName = null
 
       if (selectedReceipt && user) {
-        const maxFileSize = 10 * 1024 * 1024 // 10MB
-        if (selectedReceipt.size > maxFileSize) {
-          alert("File size must be less than 10MB")
-          return
-        }
+        const formDataToSend = new FormData()
+        formDataToSend.append("file", selectedReceipt)
 
-        const fileName = `${user.id}/${Date.now()}-${selectedReceipt.name}`
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from("receipts")
-          .upload(fileName, selectedReceipt)
+        try {
+          const response = await fetch("/api/upload-receipt", {
+            method: "POST",
+            body: formDataToSend,
+          })
 
-        if (uploadError) {
+          if (!response.ok) {
+            const errorData = await response.json()
+            alert(`Failed to upload receipt: ${errorData.error}`)
+            return
+          }
+
+          const uploadData = await response.json()
+          receiptUrl = uploadData.url
+          receiptFileName = uploadData.filename
+        } catch (uploadError) {
           console.error("[v0] Upload error:", uploadError)
-          alert(`Failed to upload receipt: ${uploadError.message}`)
+          alert("Failed to upload receipt. Please check your connection and try again.")
           return
         }
-
-        const { data } = supabase.storage.from("receipts").getPublicUrl(fileName)
-        receiptUrl = data.publicUrl
-        receiptFileName = selectedReceipt.name
       }
 
       if (editingId) {
@@ -255,25 +258,28 @@ export default function ExpensesPage() {
   const handleUploadReceipt = async (expenseId: string, file: File) => {
     try {
       setUploadingExpenseId(expenseId)
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
 
-      if (!user) throw new Error("User not authenticated")
+      const formDataToSend = new FormData()
+      formDataToSend.append("file", file)
 
-      const fileName = `${user.id}/${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, file)
+      const response = await fetch("/api/upload-receipt", {
+        method: "POST",
+        body: formDataToSend,
+      })
 
-      if (uploadError) throw uploadError
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Failed to upload receipt: ${errorData.error}`)
+        return
+      }
 
-      const { data } = supabase.storage.from("receipts").getPublicUrl(fileName)
-      const receiptUrl = data.publicUrl
+      const uploadData = await response.json()
 
       const { error: updateError } = await supabase
         .from("expenses")
         .update({
-          receipt_url: receiptUrl,
-          receipt_file_name: file.name,
+          receipt_url: uploadData.url,
+          receipt_file_name: uploadData.filename,
           receipt_uploaded_at: new Date().toISOString(),
         })
         .eq("id", expenseId)
@@ -282,6 +288,7 @@ export default function ExpensesPage() {
       loadData()
     } catch (error) {
       console.error("[v0] Error uploading receipt:", error)
+      alert("Failed to upload receipt. Please try again.")
     } finally {
       setUploadingExpenseId(null)
     }
