@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar"
 import { Header } from "@/components/dashboard/header"
-import { getSupabaseClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 
 interface User {
   id: string
@@ -27,7 +27,7 @@ export default function DashboardLayout({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         if (!supabase) {
           router.push("/auth/login")
           return

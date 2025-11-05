@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { getSupabaseClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 
 interface Event {
   id: string
@@ -41,7 +41,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         if (!supabase) return
 
         const {
