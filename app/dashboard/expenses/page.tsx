@@ -114,6 +114,17 @@ export default function ExpensesPage() {
   const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      if (
+        !formData.description ||
+        !formData.amount ||
+        !formData.expense_date ||
+        !formData.event_id ||
+        !formData.category_id
+      ) {
+        alert("Please fill in all required fields")
+        return
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -122,10 +133,22 @@ export default function ExpensesPage() {
       let receiptFileName = null
 
       if (selectedReceipt && user) {
-        const fileName = `${user.id}/${Date.now()}-${selectedReceipt.name}`
-        const { error: uploadError } = await supabase.storage.from("receipts").upload(fileName, selectedReceipt)
+        const maxFileSize = 10 * 1024 * 1024 // 10MB
+        if (selectedReceipt.size > maxFileSize) {
+          alert("File size must be less than 10MB")
+          return
+        }
 
-        if (uploadError) throw uploadError
+        const fileName = `${user.id}/${Date.now()}-${selectedReceipt.name}`
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from("receipts")
+          .upload(fileName, selectedReceipt)
+
+        if (uploadError) {
+          console.error("[v0] Upload error:", uploadError)
+          alert(`Failed to upload receipt: ${uploadError.message}`)
+          return
+        }
 
         const { data } = supabase.storage.from("receipts").getPublicUrl(fileName)
         receiptUrl = data.publicUrl
@@ -150,7 +173,11 @@ export default function ExpensesPage() {
 
         const { error } = await supabase.from("expenses").update(updateData).eq("id", editingId)
 
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Update error:", error)
+          alert(`Failed to update expense: ${error.message}`)
+          return
+        }
       } else {
         // Create new expense
         const { error } = await supabase.from("expenses").insert({
@@ -165,7 +192,11 @@ export default function ExpensesPage() {
           receipt_uploaded_at: receiptUrl ? new Date().toISOString() : null,
         })
 
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Insert error:", error)
+          alert(`Failed to save expense: ${error.message}`)
+          return
+        }
       }
 
       setFormData({
@@ -181,6 +212,7 @@ export default function ExpensesPage() {
       loadData()
     } catch (error) {
       console.error("[v0] Error saving expense:", error)
+      alert("An unexpected error occurred. Please try again.")
     }
   }
 
