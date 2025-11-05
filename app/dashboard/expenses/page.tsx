@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Trash2, Edit2 } from "lucide-react"
 
 interface Expense {
   id: string
@@ -25,6 +26,8 @@ interface Expense {
   expense_date: string
   receipt_url?: string
   receipt_file_name?: string
+  event_id: string
+  category_id: string
   categories?: { name: string }
   events?: { name: string }
 }
@@ -54,6 +57,7 @@ export default function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [selectedReceipt, setSelectedReceipt] = useState<File | null>(null)
   const [uploadingExpenseId, setUploadingExpenseId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -85,6 +89,8 @@ export default function ExpensesPage() {
           expense_date,
           receipt_url,
           receipt_file_name,
+          event_id,
+          category_id,
           categories:category_id(name),
           events:event_id(name)
         `)
@@ -105,7 +111,7 @@ export default function ExpensesPage() {
     }
   }
 
-  const handleAddExpense = async (e: React.FormEvent) => {
+  const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const {
@@ -126,19 +132,42 @@ export default function ExpensesPage() {
         receiptFileName = selectedReceipt.name
       }
 
-      const { error } = await supabase.from("expenses").insert({
-        created_by: user?.id,
-        description: formData.description,
-        amount: Number.parseFloat(formData.amount),
-        expense_date: formData.expense_date,
-        event_id: formData.event_id,
-        category_id: formData.category_id,
-        receipt_url: receiptUrl,
-        receipt_file_name: receiptFileName,
-        receipt_uploaded_at: receiptUrl ? new Date().toISOString() : null,
-      })
+      if (editingId) {
+        // Update existing expense
+        const updateData: any = {
+          description: formData.description,
+          amount: Number.parseFloat(formData.amount),
+          expense_date: formData.expense_date,
+          event_id: formData.event_id,
+          category_id: formData.category_id,
+        }
 
-      if (error) throw error
+        if (receiptUrl) {
+          updateData.receipt_url = receiptUrl
+          updateData.receipt_file_name = receiptFileName
+          updateData.receipt_uploaded_at = new Date().toISOString()
+        }
+
+        const { error } = await supabase.from("expenses").update(updateData).eq("id", editingId)
+
+        if (error) throw error
+      } else {
+        // Create new expense
+        const { error } = await supabase.from("expenses").insert({
+          created_by: user?.id,
+          description: formData.description,
+          amount: Number.parseFloat(formData.amount),
+          expense_date: formData.expense_date,
+          event_id: formData.event_id,
+          category_id: formData.category_id,
+          receipt_url: receiptUrl,
+          receipt_file_name: receiptFileName,
+          receipt_uploaded_at: receiptUrl ? new Date().toISOString() : null,
+        })
+
+        if (error) throw error
+      }
+
       setFormData({
         description: "",
         amount: "",
@@ -147,11 +176,48 @@ export default function ExpensesPage() {
         category_id: "",
       })
       setSelectedReceipt(null)
+      setEditingId(null)
       setIsOpen(false)
       loadData()
     } catch (error) {
-      console.error("[v0] Error adding expense:", error)
+      console.error("[v0] Error saving expense:", error)
     }
+  }
+
+  const handleEditExpense = (expense: Expense) => {
+    setFormData({
+      description: expense.description,
+      amount: expense.amount.toString(),
+      expense_date: expense.expense_date,
+      event_id: expense.event_id,
+      category_id: expense.category_id,
+    })
+    setEditingId(expense.id)
+    setIsOpen(true)
+  }
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this expense?")) return
+    try {
+      const { error } = await supabase.from("expenses").delete().eq("id", id)
+      if (error) throw error
+      loadData()
+    } catch (error) {
+      console.error("[v0] Error deleting expense:", error)
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setFormData({
+      description: "",
+      amount: "",
+      expense_date: "",
+      event_id: "",
+      category_id: "",
+    })
+    setSelectedReceipt(null)
+    setEditingId(null)
+    setIsOpen(false)
   }
 
   const handleUploadReceipt = async (expenseId: string, file: File) => {
@@ -196,16 +262,24 @@ export default function ExpensesPage() {
           <h1 className="text-3xl font-bold">Expenses</h1>
           <p className="text-muted-foreground">Track all event expenses with receipt management</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+          open={isOpen}
+          onOpenChange={(open) => {
+            if (!open) handleCloseDialog()
+            setIsOpen(open)
+          }}
+        >
           <DialogTrigger asChild>
             <Button>+ Add Expense</Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add New Expense</DialogTitle>
-              <DialogDescription>Record an expense for your event</DialogDescription>
+              <DialogTitle>{editingId ? "Edit Expense" : "Add New Expense"}</DialogTitle>
+              <DialogDescription>
+                {editingId ? "Update expense details" : "Record an expense for your event"}
+              </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddExpense} className="space-y-4">
+            <form onSubmit={handleSaveExpense} className="space-y-4">
               <div className="space-y-2">
                 <Label>Event</Label>
                 <Select
@@ -281,7 +355,7 @@ export default function ExpensesPage() {
                 {selectedReceipt && <p className="text-sm text-muted-foreground">Selected: {selectedReceipt.name}</p>}
               </div>
               <Button type="submit" className="w-full">
-                Add Expense
+                {editingId ? "Update Expense" : "Add Expense"}
               </Button>
             </form>
           </DialogContent>
@@ -307,6 +381,7 @@ export default function ExpensesPage() {
                     <th className="text-right py-3 px-4 font-semibold">Amount</th>
                     <th className="text-left py-3 px-4 font-semibold">Receipt</th>
                     <th className="text-left py-3 px-4 font-semibold">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -346,6 +421,24 @@ export default function ExpensesPage() {
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">
                         {new Date(expense.expense_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditExpense(expense)}
+                            className="p-1 hover:bg-muted rounded transition-colors"
+                            title="Edit expense"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="p-1 hover:bg-destructive/10 rounded transition-colors"
+                            title="Delete expense"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
