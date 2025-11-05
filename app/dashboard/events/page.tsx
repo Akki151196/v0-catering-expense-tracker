@@ -27,6 +27,7 @@ interface Event {
   status: string
   notes: string
   pax: number
+  booked_amount: number
   created_at: string
 }
 
@@ -41,6 +42,7 @@ export default function EventsPage() {
     client_name: "",
     location: "",
     pax: "",
+    booked_amount: "",
     notes: "",
   })
 
@@ -85,6 +87,7 @@ export default function EventsPage() {
             client_name: formData.client_name,
             location: formData.location,
             pax: Number.parseInt(formData.pax) || 0,
+            booked_amount: Number.parseFloat(formData.booked_amount) || 0,
             notes: formData.notes,
             updated_at: new Date().toISOString(),
           })
@@ -99,12 +102,13 @@ export default function EventsPage() {
           client_name: formData.client_name,
           location: formData.location,
           pax: Number.parseInt(formData.pax) || 0,
+          booked_amount: Number.parseFloat(formData.booked_amount) || 0,
           notes: formData.notes,
         })
         if (error) throw error
       }
 
-      setFormData({ name: "", date: "", client_name: "", location: "", pax: "", notes: "" })
+      setFormData({ name: "", date: "", client_name: "", location: "", pax: "", booked_amount: "", notes: "" })
       setEditingId(null)
       setIsOpen(false)
       loadEvents()
@@ -120,6 +124,7 @@ export default function EventsPage() {
       client_name: event.client_name,
       location: event.location,
       pax: event.pax.toString(),
+      booked_amount: event.booked_amount.toString(),
       notes: event.notes,
     })
     setEditingId(event.id)
@@ -138,7 +143,7 @@ export default function EventsPage() {
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: "", date: "", client_name: "", location: "", pax: "", notes: "" })
+    setFormData({ name: "", date: "", client_name: "", location: "", pax: "", booked_amount: "", notes: "" })
     setEditingId(null)
     setIsOpen(false)
   }
@@ -212,6 +217,16 @@ export default function EventsPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label>Booked Amount (₹)</Label>
+                <Input
+                  type="number"
+                  placeholder="50000"
+                  step="0.01"
+                  value={formData.booked_amount}
+                  onChange={(e) => setFormData({ ...formData, booked_amount: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Notes</Label>
                 <Input
                   placeholder="Any special notes..."
@@ -274,6 +289,13 @@ export default function EventsPage() {
                   </p>
                   <p>
                     <span className="font-semibold">Guests (Pax):</span> {event.pax}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Booked Amount:</span> ₹
+                    {event.booked_amount.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </p>
                   {event.notes && (
                     <p className="md:col-span-2">

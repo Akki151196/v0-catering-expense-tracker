@@ -84,6 +84,20 @@ export function Sidebar({ user }: SidebarProps) {
             <span>Expenses</span>
           </Button>
         </Link>
+        <Link href="/dashboard/analytics">
+          <Button
+            variant={isActive("/dashboard/analytics") ? "default" : "ghost"}
+            className={`w-full justify-start font-medium ${
+              isActive("/dashboard/analytics")
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+            }`}
+            size="sm"
+          >
+            <span className="text-lg">📈</span>
+            <span>Analytics</span>
+          </Button>
+        </Link>
         <Link href="/dashboard/reports">
           <Button
             variant={isActive("/dashboard/reports") ? "default" : "ghost"}
@@ -94,7 +108,7 @@ export function Sidebar({ user }: SidebarProps) {
             }`}
             size="sm"
           >
-            <span className="text-lg">📈</span>
+            <span className="text-lg">📊</span>
             <span>Reports</span>
           </Button>
         </Link>
