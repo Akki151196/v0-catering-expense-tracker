@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { createClient } from "@/lib/supabase/client"
+import { EventProfitability } from "@/components/dashboard/event-profitability"
 
 interface Event {
   id: string
@@ -12,6 +13,7 @@ interface Event {
   client_name: string
   status: string
   created_at: string
+  booked_amount: number
 }
 
 interface Expense {
@@ -49,9 +51,30 @@ export default function DashboardPage() {
         } = await supabase.auth.getUser()
         if (!user) return
 
-        // For now, just set empty state until database is set up
-        setEvents([])
-        setExpenses([])
+        const { data: eventsData, error: eventsError } = await supabase
+          .from("events")
+          .select("id, name, date, client_name, status, created_at, booked_amount")
+          .order("created_at", { ascending: false })
+
+        const { data: expensesData, error: expensesError } = await supabase
+          .from("expenses")
+          .select("id, description, amount, expense_date, created_at, categories(name), events(name)")
+          .order("created_at", { ascending: false })
+          .limit(10)
+
+        if (!eventsError && eventsData) {
+          setEvents(eventsData as any)
+        }
+
+        if (!expensesError && expensesData) {
+          setExpenses(
+            expensesData.map((exp: any) => ({
+              ...exp,
+              category_name: exp.categories?.name,
+              event_name: exp.events?.name,
+            })) as any,
+          )
+        }
       } catch (err) {
         console.log("[v0] Error loading data:", err)
       } finally {
@@ -130,8 +153,9 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Recent Activity</CardTitle>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Today's date</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
@@ -141,6 +165,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Event Profitability */}
+      <EventProfitability />
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
