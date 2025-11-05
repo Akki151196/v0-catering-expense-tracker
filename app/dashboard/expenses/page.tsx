@@ -347,6 +347,20 @@ export default function ExpensesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Receipt (Optional)</Label>
+                {editingId && expenses.find((e) => e.id === editingId)?.receipt_url && (
+                  <div className="mb-3 p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium mb-2">Current Receipt:</p>
+                    <a
+                      href={expenses.find((e) => e.id === editingId)?.receipt_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-xs break-all"
+                    >
+                      {expenses.find((e) => e.id === editingId)?.receipt_file_name}
+                    </a>
+                    <p className="text-xs text-muted-foreground mt-2">Upload a new file to replace it</p>
+                  </div>
+                )}
                 <Input
                   type="file"
                   accept="image/*,.pdf"
