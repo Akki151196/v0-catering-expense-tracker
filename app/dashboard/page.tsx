@@ -58,9 +58,11 @@ export default function DashboardPage() {
 
         const { data: expensesData, error: expensesError } = await supabase
           .from("expenses")
-          .select("id, description, amount, expense_date, created_at, categories(name), events(name)")
+          .select("id, description, amount, expense_date, created_at, expense_categories(name), events(name)")
           .order("created_at", { ascending: false })
           .limit(10)
+
+        console.log("Expenses query result:", { error: expensesError, count: expensesData?.length })
 
         if (!eventsError && eventsData) {
           setEvents(eventsData as any)
@@ -70,10 +72,17 @@ export default function DashboardPage() {
           setExpenses(
             expensesData.map((exp: any) => ({
               ...exp,
-              category_name: exp.categories?.name,
+              category_name: exp.expense_categories?.name,
               event_name: exp.events?.name,
             })) as any,
           )
+        }
+
+        if (eventsError) {
+          console.error("Events query error:", eventsError)
+        }
+        if (expensesError) {
+          console.error("Expenses query error:", expensesError)
         }
       } catch (err) {
         console.log("[v0] Error loading data:", err)
