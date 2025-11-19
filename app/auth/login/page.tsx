@@ -71,9 +71,15 @@ function LoginForm() {
 
       if (data.session && data.user) {
         console.log("Login successful! User ID:", data.user.id)
+        console.log("Session established, refreshing session...")
+
+        // Refresh the session to ensure cookies are set
+        await supabase.auth.refreshSession()
+
         console.log("Redirecting to dashboard...")
 
-        window.location.replace("/dashboard")
+        // Use router.push for better Next.js integration
+        router.push("/dashboard")
       } else {
         console.error("No session or user returned")
         setError("Login failed. Please try again.")

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { createClient } from "@/lib/supabase/client"
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const loadData = async () => {
@@ -129,7 +131,10 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       {/* Summary Cards */}
       <div className="grid md:grid-cols-4 gap-4">
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:border-primary/50"
+          onClick={() => router.push("/dashboard/events")}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Events</CardTitle>
           </CardHeader>
@@ -138,30 +143,42 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground mt-1">
               {upcomingEvents} planned, {completedEvents} completed
             </p>
+            <p className="text-xs text-primary mt-2 font-medium">Click to view →</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:border-primary/50"
+          onClick={() => router.push("/dashboard/expenses")}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatINR(totalExpenses)}</div>
             <p className="text-xs text-muted-foreground mt-1">{expenses.length} expenses tracked</p>
+            <p className="text-xs text-primary mt-2 font-medium">Click to view →</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:border-primary/50"
+          onClick={() => router.push("/dashboard/analytics")}
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">Avg Per Event</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatINR(events.length > 0 ? totalExpenses / events.length : 0)}</div>
             <p className="text-xs text-muted-foreground mt-1">Average expense per event</p>
+            <p className="text-xs text-primary mt-2 font-medium">Click to view analytics →</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:border-primary/50"
+          onClick={() => router.push("/dashboard/reports")}
+        >
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>Today's date</CardDescription>
@@ -171,6 +188,7 @@ export default function DashboardPage() {
               {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Today's date</p>
+            <p className="text-xs text-primary mt-2 font-medium">Click to view reports →</p>
           </CardContent>
         </Card>
       </div>
