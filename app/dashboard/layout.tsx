@@ -36,25 +36,43 @@ export default function DashboardLayout({
     const checkAuth = async () => {
       try {
         const supabase = createClient()
-        if (!supabase) {
-          router.push("/auth/login")
+        console.log("Dashboard: Checking authentication...")
+
+        // First check for session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        console.log("Dashboard: Session check:", !!session)
+
+        if (!session) {
+          console.log("Dashboard: No session found, redirecting to login")
+          router.replace("/auth/login")
           return
         }
 
+        // Then get user details
         const {
           data: { user: currentUser },
           error,
         } = await supabase.auth.getUser()
 
+        console.log("Dashboard: User check:", {
+          hasUser: !!currentUser,
+          error: error?.message
+        })
+
         if (error || !currentUser) {
-          router.push("/auth/login")
+          console.log("Dashboard: No user found, redirecting to login")
+          router.replace("/auth/login")
           return
         }
 
+        console.log("Dashboard: Auth successful, user ID:", currentUser.id)
         setUser(currentUser)
       } catch (err) {
-        console.log("[v0] Auth check error:", err)
-        router.push("/auth/login")
+        console.error("Dashboard: Auth check error:", err)
+        router.replace("/auth/login")
       } finally {
         setLoading(false)
       }

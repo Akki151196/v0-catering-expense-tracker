@@ -38,14 +38,22 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
+      const supabase = createClient()
+      console.log("Attempting login for:", email)
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: email.trim(),
+        password: password,
+      })
+
+      console.log("Login response:", {
+        hasSession: !!data.session,
+        hasUser: !!data.user,
+        error: error?.message
       })
 
       if (error) {
@@ -57,20 +65,23 @@ function LoginForm() {
         } else {
           setError(error.message)
         }
+        setIsLoading(false)
         return
       }
 
       if (data.session && data.user) {
-        console.log("Login successful, redirecting to dashboard")
-        await new Promise(resolve => setTimeout(resolve, 100))
-        window.location.href = "/dashboard"
+        console.log("Login successful! User ID:", data.user.id)
+        console.log("Redirecting to dashboard...")
+
+        window.location.replace("/dashboard")
       } else {
+        console.error("No session or user returned")
         setError("Login failed. Please try again.")
+        setIsLoading(false)
       }
     } catch (error: unknown) {
       console.error("Unexpected error:", error)
       setError("An unexpected error occurred. Please try again.")
-    } finally {
       setIsLoading(false)
     }
   }
