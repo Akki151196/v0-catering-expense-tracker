@@ -18,8 +18,6 @@ import {
 } from "@/components/ui/dialog"
 import { Trash2, Edit2 } from "lucide-react"
 
-export const dynamic = 'force-dynamic'
-
 interface Event {
   id: string
   name: string

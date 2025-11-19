@@ -8,8 +8,6 @@ import { MobileSidebar } from "@/components/dashboard/mobile-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { createClient } from "@/lib/supabase/client"
 
-export const dynamic = 'force-dynamic'
-
 interface User {
   id: string
   email: string
