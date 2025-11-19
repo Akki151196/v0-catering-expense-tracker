@@ -49,7 +49,7 @@ function LoginForm() {
       })
 
       if (error) {
-        console.log("[v0] Login error:", error.message)
+        console.error("Login error:", error)
         if (error.message.includes("Email not confirmed")) {
           setError("Please verify your email first. Check your inbox for the confirmation link.")
         } else if (error.message.includes("Invalid login credentials")) {
@@ -57,15 +57,19 @@ function LoginForm() {
         } else {
           setError(error.message)
         }
-        throw error
+        return
       }
 
-      if (data.user) {
-        router.push("/dashboard")
-        router.refresh()
+      if (data.session && data.user) {
+        console.log("Login successful, redirecting to dashboard")
+        await new Promise(resolve => setTimeout(resolve, 100))
+        window.location.href = "/dashboard"
+      } else {
+        setError("Login failed. Please try again.")
       }
     } catch (error: unknown) {
-      // Error already handled above
+      console.error("Unexpected error:", error)
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }

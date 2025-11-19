@@ -54,12 +54,16 @@ export default function SignUpPage() {
 
       if (data.user) {
         if (data.session) {
-          router.push("/dashboard")
+          console.log("Sign up successful with session, redirecting to dashboard")
+          await new Promise(resolve => setTimeout(resolve, 100))
+          window.location.href = "/dashboard"
         } else {
-          router.push("/auth/login?message=Account created successfully! You can now sign in.")
+          console.log("Sign up successful without session, redirecting to login")
+          window.location.href = "/auth/login?message=Account created successfully! You can now sign in."
         }
       }
     } catch (error: unknown) {
+      console.error("Sign up error:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
