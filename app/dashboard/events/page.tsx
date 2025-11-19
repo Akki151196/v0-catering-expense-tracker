@@ -54,13 +54,9 @@ export default function EventsPage() {
 
   const loadEvents = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
       const { data } = await supabase
         .from("events")
         .select("*")
-        .eq("created_by", user?.id)
         .order("date", { ascending: false })
       setEvents(data || [])
     } catch (error) {
