@@ -18,6 +18,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+export const dynamic = 'force-dynamic'
+
 interface EventAnalytics {
   id: string
   name: string

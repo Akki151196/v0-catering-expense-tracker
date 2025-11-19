@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { exportToCSV, generateProfitLossReport, exportReportToJSON } from "@/lib/export-utils"
 
+export const dynamic = 'force-dynamic'
+
 interface Event {
   id: string
   name: string

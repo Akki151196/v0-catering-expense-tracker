@@ -18,6 +18,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Trash2, Edit2, Upload, FileText, X } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 interface Expense {
   id: string
   description: string

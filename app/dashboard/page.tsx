@@ -7,6 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { createClient } from "@/lib/supabase/client"
 import { EventProfitability } from "@/components/dashboard/event-profitability"
 
+export const dynamic = 'force-dynamic'
+
 interface Event {
   id: string
   name: string
