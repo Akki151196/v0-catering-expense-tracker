@@ -335,7 +335,7 @@ export default function AnalyticsPage() {
 
       {/* Summary Cards */}
       <div className="grid md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
@@ -348,9 +348,12 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Total Expenses
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatINR(totalExpenses)}</div>
@@ -360,7 +363,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
@@ -375,7 +378,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:-translate-y-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Percent className="w-4 h-4" />
