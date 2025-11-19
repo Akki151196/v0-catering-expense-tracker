@@ -8,16 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useCallback, useState, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useState, useRef, useEffect, Suspense } from "react"
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const passwordInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const message = searchParams.get('message')
+    if (message) {
+      setSuccessMessage(message)
+    }
+  }, [searchParams])
 
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
@@ -34,7 +43,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -42,15 +51,19 @@ export default function LoginPage() {
       if (error) {
         console.log("[v0] Login error:", error.message)
         if (error.message.includes("Email not confirmed")) {
-          setError("Please confirm your email first. Check your inbox for the confirmation link.")
+          setError("Please verify your email first. Check your inbox for the confirmation link.")
         } else if (error.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password. If you just signed up, check your email to confirm your account.")
+          setError("Invalid email or password. Please check your credentials and try again.")
         } else {
           setError(error.message)
         }
         throw error
       }
-      router.push("/dashboard")
+
+      if (data.user) {
+        router.push("/dashboard")
+        router.refresh()
+      }
     } catch (error: unknown) {
       // Error already handled above
     } finally {
@@ -114,6 +127,11 @@ export default function LoginPage() {
                     className="border-border/50 focus:border-primary"
                   />
                 </div>
+                {successMessage && (
+                  <p className="text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200">
+                    {successMessage}
+                  </p>
+                )}
                 {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
                 <Button
                   type="submit"
@@ -134,5 +152,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
